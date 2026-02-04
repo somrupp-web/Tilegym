@@ -5,7 +5,7 @@
 specVersion: v2
 specMinorVersion: 2
 meta:
-    name: Tilegym
+    name: tilegym
     image: Tilegym
     description: Tilegym Demonstration
     labels: []
