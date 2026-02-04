@@ -29,21 +29,21 @@ environment:
     os_distro: ubuntu
     os_distro_release: "22.04"
     schema_version: v2
-    # ADD THESE: AI Workbench needs to know where binaries are located
+    # REQUIRED: AI Workbench needs to map these to internal build commands
     package_managers:
       - name: apt
         binary_path: /usr/bin/apt
       - name: pip
         binary_path: /usr/bin/pip
-  # Move your setup commands here so they run during build
+  
+  # Ensure setup commands are correctly list-formatted
   setup:
     - python -m pip install --upgrade pip setuptools wheel
     - pip install --no-cache-dir --pre "torch==2.9.1" --index-url https://download.pytorch.org/whl/cu130
     - pip install --no-cache-dir cuda-tile
     - pip install --no-cache-dir --no-deps accelerate
-    - pip install -e .  # Equivalent to your 'source' target install
+    - pip install -e .
 
-# Replicates your ENV and directory creation
 variables:
   - name: PYTHONUNBUFFERED
     value: "1"
@@ -53,34 +53,24 @@ variables:
     value: "/workspace/.cache"
 
 execution:
-    apps:
-        - name: jupyterlab
-          type: jupyterlab
-          class: webapp
-          start_command: jupyter lab --allow-root --port 8888 --ip 0.0.0.0 --no-browser --NotebookApp.base_url=\$PROXY_PREFIX --NotebookApp.default_url=/lab --notebook-dir=/project/
-          health_check_command: '[ \$(echo url=\$(jupyter lab list 2>&1 | head -n 2 | tail -n 1 | cut -f1 -d'''' '''' | grep -v ''''Currently'''' | sed ''''s@/?@/lab?@g'''') | curl -o /dev/null -s -w ''''%{http_code}'''' --config -) == ''''200'''' ]'
-          stop_command: jupyter lab stop 8888
-          user_msg: ""
-          logfile_path: ""
-          timeout_seconds: 60
-          icon_url: ""
-          webapp_options:
-            autolaunch: true
-            port: "8888"
-            proxy:
-                trim_prefix: false
-            url_command: jupyter lab list 2>&1 | head -n 2 | tail -n 1 | cut -f1 -d' ' | grep -v 'Currently'
-    resources:
-        gpu:
-            requested: 1
-        sharedMemoryMB: 1024
-    secrets: []
-    mounts:
-        - type: project
-          target: /project/
-          description: Project directory
-          options: rw
-        - type: volume
-          target: /mnt/cache/
-          description: Huggingface cache root
-          options: ""
+  apps:
+    - name: jupyterlab
+      type: jupyterlab
+      class: webapp
+      start_command: jupyter lab --allow-root --port 8888 --ip 0.0.0.0 --no-browser --NotebookApp.base_url=$PROXY_PREFIX --NotebookApp.default_url=/lab --notebook-dir=/project/
+      health_check_command: '[ $(echo url=$(jupyter lab list 2>&1 | head -n 2 | tail -n 1 | cut -f1 -d" " | grep -v "Currently" | sed "s@/?@/lab?@g") | curl -o /dev/null -s -w "%{http_code}" --config -) == "200" ]'
+      stop_command: jupyter lab stop 8888
+      webapp_options:
+        autolaunch: true
+        port: "8888"
+        proxy:
+          trim_prefix: false
+  resources:
+    gpu:
+      requested: 1
+    sharedMemoryMB: 1024
+  mounts:
+    - type: project
+      target: /project/
+      description: Project directory
+      options: rw
