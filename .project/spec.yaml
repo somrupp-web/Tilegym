@@ -1,0 +1,21 @@
+specVersion: v2
+specMinorVersion: 2
+meta:
+  name: tilegym-project
+  image: project-tilegym
+  description: "TileGym ported to AI Workbench"
+  createdOn: "2026-02-04T11:00:00Z"
+  defaultBranch: main
+environment:
+  base:
+    registry: nvcr.io
+    image: nvidia/pytorch:24.03-py3
+    name: PyTorch
+    os_distro: ubuntu
+    os_distro_release: "22.04"
+layout:
+  - path: code/
+    type: code
+    storage: git
+  - path: models/
+    type: models
